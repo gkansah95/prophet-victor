@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prophet Victor A.Y. – Global Seekers Chapel | Seeking God</title>
+    <meta
+      name="description"
+      content="Official personal ministry website for Prophet Victor A.Y. and Global Seekers Chapel – Seeking God. Explore sermons, programmes, publications, devotionals, and prayer ministry."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Global Seekers Chapel" />
+    <meta property="og:title" content="Prophet Victor A.Y. – Global Seekers Chapel | Seeking God" />
+    <meta
+      property="og:description"
+      content="Official personal ministry website for Prophet Victor A.Y. and Global Seekers Chapel – Seeking God. Explore sermons, programmes, publications, devotionals, and prayer ministry."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Prophet Victor A.Y. – Global Seekers Chapel | Seeking God" />
+    <meta
+      name="twitter:description"
+      content="Official personal ministry website for Prophet Victor A.Y. and Global Seekers Chapel – Seeking God. Explore sermons, programmes, publications, devotionals, and prayer ministry."
+    />
+    <meta name="theme-color" content="#0A193C" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ReligiousOrganization",
+        "name": "Global Seekers Chapel",
+        "slogan": "Seeking God",
+        "founder": {
+          "@type": "Person",
+          "name": "Prophet Victor A.Y."
+        },
+        "description": "Official personal ministry website for Prophet Victor A.Y. and Global Seekers Chapel – Seeking God."
+      }
+    </script>
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('gsc-theme');
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (saved === 'dark' || (!saved && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-white text-slate-900 dark:bg-[#060E24] dark:text-slate-100 antialiased selection:bg-[#C6922C]/25 selection:text-[#0F296B] dark:selection:text-[#F3D27A]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

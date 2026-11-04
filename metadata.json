@@ -1,0 +1,6 @@
+{
+  "name": "Prophet Victor A.Y. – Global Seekers Chapel",
+  "description": "Official personal ministry website for Prophet Victor A.Y. and Global Seekers Chapel – Seeking God. Explore sermons, programmes, publications, devotionals, and prayer ministry.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production & build outputs
+dist/
+dist-ssr/
+build/
+server.js
+*.local
+
+# Environment variables & secrets (NEVER COMMIT TO GITHUB)
+.env
+.env.*
+*.env
+!.env.example
+.secrets/
+secrets/
+
+# Cryptographic keys, certificates & service credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*credentials*.json
+*service-account*.json
+*secret*.json
+
+# Cloud & hosting CLI directories
+.vercel/
+.railway/
+.fly/
+.render/
+
+# Logs, caches & OS/IDE artifacts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+.cache/
+.temp/
+.tmp/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
