@@ -11,6 +11,7 @@ import {
   HeroSlide,
   HomepageSection,
   InquirySubmission,
+  NewsletterSubscriber,
   PastorProfile,
   PrayerRequest,
   Sermon,
@@ -22,6 +23,7 @@ import {
   publicContactSchema,
   publicEventRegistrationSchema,
   publicInvitationSchema,
+  publicNewsletterSchema,
   publicPrayerRequestSchema,
 } from '../validators/schemas.ts';
 
@@ -537,6 +539,48 @@ router.post(
     } catch (err) {
       console.error('[Public] Event registration failed:', err instanceof Error ? err.message : err);
       res.status(500).json({ error: 'Unable to complete registration at this time.' });
+    }
+  }
+);
+
+// NEWSLETTER SUBSCRIPTION (Public write with upsert & duplicate tolerance)
+router.post(
+  '/newsletter',
+  publicSubmissionRateLimiter,
+  requireDatabase,
+  async (req: Request, res: Response) => {
+    try {
+      const parsed = publicNewsletterSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: formatZodError(parsed.error) });
+        return;
+      }
+
+      const normalizedEmail = parsed.data.email.toLowerCase().trim();
+      const fullName = (parsed.data.fullName || '').trim();
+
+      await NewsletterSubscriber.findOneAndUpdate(
+        { email: normalizedEmail },
+        {
+          $set: {
+            email: normalizedEmail,
+            fullName: fullName || undefined,
+            status: 'active',
+            source: 'footer',
+          },
+        },
+        { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+      );
+
+      res.status(201).json({
+        success: true,
+        message: 'Thank you for subscribing! You will receive ministry updates and prophetic declarations.',
+      });
+    } catch (err) {
+      console.error('[Public] Newsletter subscription failed:', err instanceof Error ? err.message : err);
+      res.status(500).json({
+        error: 'Unable to process your newsletter subscription right now. Please try again later.',
+      });
     }
   }
 );

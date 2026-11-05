@@ -17,6 +17,7 @@ import {
   HomepageSection,
   InquirySubmission,
   MediaAsset,
+  NewsletterSubscriber,
   PastorProfile,
   PrayerRequest,
   Sermon,
@@ -94,6 +95,7 @@ router.get('/overview', async (_req: AuthenticatedRequest, res: Response) => {
       totalPrayers,
       pendingInquiries,
       totalMedia,
+      activeSubscribers,
     ] = await Promise.all([
       HeroSlide.countDocuments(),
       HeroSlide.countDocuments({ status: 'published', isActive: true }),
@@ -112,6 +114,7 @@ router.get('/overview', async (_req: AuthenticatedRequest, res: Response) => {
       PrayerRequest.countDocuments(),
       InquirySubmission.countDocuments({ status: 'pending' }),
       MediaAsset.countDocuments(),
+      NewsletterSubscriber.countDocuments({ status: 'active' }),
     ]);
 
     res.json({
@@ -133,6 +136,7 @@ router.get('/overview', async (_req: AuthenticatedRequest, res: Response) => {
         totalPrayers,
         pendingInquiries,
         totalMedia,
+        activeSubscribers,
       },
       services: {
         databaseConnected: true,
@@ -1215,6 +1219,37 @@ router.delete('/inquiries/:id', async (req: AuthenticatedRequest, res: Response)
     res.json({ success: true, message: 'Submission deleted.' });
   } catch {
     res.status(500).json({ error: 'Unable to delete submission.' });
+  }
+});
+
+// NEWSLETTER SUBSCRIBERS MANAGEMENT
+router.get('/newsletter-subscribers', async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const subscribers = await NewsletterSubscriber.find()
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ subscribers });
+  } catch {
+    res.status(500).json({ error: 'Unable to retrieve newsletter subscribers.' });
+  }
+});
+
+router.delete('/newsletter-subscribers/:id', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      res.status(400).json({ error: 'Invalid subscriber ID.' });
+      return;
+    }
+
+    const deleted = await NewsletterSubscriber.findByIdAndDelete(req.params.id).lean();
+    if (!deleted) {
+      res.status(404).json({ error: 'Subscriber not found.' });
+      return;
+    }
+
+    res.json({ success: true, message: 'Subscriber removed.' });
+  } catch {
+    res.status(500).json({ error: 'Unable to remove subscriber.' });
   }
 });
 

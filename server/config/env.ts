@@ -2,9 +2,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+function resolvePort(): number {
+  const portArgIndex = process.argv.indexOf('--port');
+  if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
+    const parsed = Number(process.argv[portArgIndex + 1]);
+    if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+  }
+  // In Cloud Run / AI Studio container environment, PORT=8080 is used by Nginx reverse proxy.
+  // The applet dev server must listen on port 3000.
+  if (process.env.PORT && process.env.PORT !== '8080') {
+    const parsed = Number(process.env.PORT);
+    if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+  }
+  return 3000;
+}
+
 export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
-  PORT: Number(process.env.PORT || 3000),
+  PORT: resolvePort(),
   APP_URL: (process.env.APP_URL || '').trim(),
   FRONTEND_URL: (process.env.FRONTEND_URL || '').trim(),
   MONGODB_URI: (process.env.MONGODB_URI || '').trim(),

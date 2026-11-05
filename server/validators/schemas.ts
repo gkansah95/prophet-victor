@@ -322,3 +322,9 @@ export const publicEventRegistrationSchema = z.object({
 export const reviewStatusSchema = z.object({
   status: z.enum(['pending', 'reviewed']),
 });
+
+export const publicNewsletterSchema = z.object({
+  email: z.string().email('Please enter a valid email address.').max(180),
+  fullName: z.string().max(140).optional().default(''),
+});
+

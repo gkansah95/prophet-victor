@@ -284,4 +284,16 @@ export interface AdminOverviewStats {
   totalPrayers: number;
   pendingInquiries: number;
   totalMedia: number;
+  activeSubscribers?: number;
 }
+
+export interface NewsletterSubscriberItem {
+  _id: string;
+  email: string;
+  fullName?: string;
+  source: string;
+  status: 'active' | 'unsubscribed';
+  createdAt: string;
+  updatedAt: string;
+}
+

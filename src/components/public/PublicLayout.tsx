@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 import { useSiteData } from '../../context/SiteDataContext';
 import { useTheme } from '../../context/ThemeContext';
+import { NewsletterSignup } from './NewsletterSignup';
 
 const PUBLIC_NAV_LINKS = [
   { label: 'Home', to: '/' },
@@ -157,6 +158,9 @@ export function PublicLayout() {
       {/* Institutional Royal Navy Footer (Zero fictional info, Zero admin links) */}
       <footer className="bg-[#07122B] text-slate-300 border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+          {/* Ministry Newsletter Signup */}
+          <NewsletterSignup className="mb-12 lg:mb-16" />
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
             {/* Brand Column */}
             <div className="lg:col-span-5">

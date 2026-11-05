@@ -1013,4 +1013,43 @@ export const InquirySubmission =
 export const MediaAsset =
   mongoose.models.MediaAsset || mongoose.model('MediaAsset', MediaAssetSchema);
 
+// 16. NEWSLETTER SUBSCRIBERS COLLECTION (newsletterSubscribers)
+const NewsletterSubscriberSchema = new Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      maxlength: 180,
+      index: true,
+    },
+    fullName: {
+      type: String,
+      trim: true,
+      maxlength: 140,
+      default: '',
+    },
+    source: {
+      type: String,
+      trim: true,
+      maxlength: 60,
+      default: 'footer',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'unsubscribed'],
+      default: 'active',
+      index: true,
+    },
+  },
+  { timestamps: true, collection: 'newsletterSubscribers' }
+);
+
+export const NewsletterSubscriber =
+  mongoose.models.NewsletterSubscriber ||
+  mongoose.model('NewsletterSubscriber', NewsletterSubscriberSchema);
+
 export type AdminDoc = InferSchemaType<typeof AdminSchema>;
+

@@ -34,27 +34,9 @@ async function startServer() {
     helmet({
       frameguard: false,
       crossOriginEmbedderPolicy: false,
-      contentSecurityPolicy:
-        env.NODE_ENV === 'production'
-          ? {
-              directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", "'unsafe-inline'"],
-                styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-                fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
-                imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com'],
-                mediaSrc: ["'self'", 'https://res.cloudinary.com', 'https:'],
-                connectSrc: ["'self'", 'https://api.cloudinary.com', 'https://res.cloudinary.com'],
-                frameSrc: [
-                  "'self'",
-                  'https://www.youtube.com',
-                  'https://www.youtube-nocookie.com',
-                  'https://player.vimeo.com',
-                ],
-                frameAncestors: ["'self'", 'https://*.google.com', 'https://*.run.app'],
-              },
-            }
-          : false,
+      crossOriginOpenerPolicy: false,
+      crossOriginResourcePolicy: false,
+      contentSecurityPolicy: false,
     })
   );
 
@@ -200,7 +182,7 @@ async function startServer() {
   if (!isProdBuildReady) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: 'spa',
     });
     app.use(vite.middlewares);

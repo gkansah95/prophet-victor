@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   Lock,
   LogOut,
+  Mail,
   Menu,
   MessageSquareQuote,
   Mic2,
@@ -29,6 +30,7 @@ import {
 import {
   AccountSettingsManager,
   BlogManager,
+  NewsletterSubscribersManager,
   PrayerRequestsManager,
   SettingsSectionManager,
   TestimoniesManager,
@@ -64,6 +66,7 @@ type AdminSectionKey =
   | 'testimonies'
   | 'blog'
   | 'prayers'
+  | 'subscribers'
   | 'contact'
   | 'social'
   | 'website'
@@ -88,6 +91,7 @@ const SIDEBAR_ITEMS: SidebarNavItem[] = [
   { key: 'testimonies', label: 'Testimonies', icon: MessageSquareQuote },
   { key: 'blog', label: 'Blog and Devotionals', icon: FileText },
   { key: 'prayers', label: 'Prayer Requests', icon: HeartHandshake },
+  { key: 'subscribers', label: 'Newsletter Subscribers', icon: Mail },
   { key: 'contact', label: 'Contact Information', icon: Phone },
   { key: 'social', label: 'Social Media Links', icon: Share2 },
   { key: 'website', label: 'Website Settings', icon: Settings },
@@ -504,6 +508,12 @@ export function AdminPortalPage() {
                     sub: 'Contact & Preaching Invitations',
                     target: 'contact' as AdminSectionKey,
                   },
+                  {
+                    label: 'Active Subscribers',
+                    val: overviewStats?.activeSubscribers ?? 0,
+                    sub: 'Newsletter & Updates List',
+                    target: 'subscribers' as AdminSectionKey,
+                  },
                 ].map((card) => (
                   <button
                     key={card.label}
@@ -587,6 +597,9 @@ export function AdminPortalPage() {
           {activeSection === 'blog' && <BlogManager onUpdated={handleGlobalContentUpdated} />}
           {activeSection === 'prayers' && (
             <PrayerRequestsManager onUpdated={handleGlobalContentUpdated} />
+          )}
+          {activeSection === 'subscribers' && (
+            <NewsletterSubscribersManager onUpdated={handleGlobalContentUpdated} />
           )}
           {activeSection === 'contact' && (
             <SettingsSectionManager section="contact" onUpdated={handleGlobalContentUpdated} />

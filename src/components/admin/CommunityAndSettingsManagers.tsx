@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Check, Download, Mail, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { apiFetch } from '../../lib/api';
@@ -8,6 +8,7 @@ import type {
   BlogPostItem,
   CloudImage,
   InquirySubmissionItem,
+  NewsletterSubscriberItem,
   PrayerRequestItem,
   ServiceTimeItem,
   TestimonyItem,
@@ -1562,5 +1563,194 @@ export function AccountSettingsManager() {
         </button>
       </div>
     </form>
+  );
+}
+
+// ============================================================================
+// 7. NEWSLETTER SUBSCRIBERS MANAGER
+// ============================================================================
+export function NewsletterSubscribersManager({ onUpdated }: { onUpdated?: () => void }) {
+  const [subscribers, setSubscribers] = useState<NewsletterSubscriberItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const loadSubscribers = async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch<{ subscribers: NewsletterSubscriberItem[] }>(
+        '/api/admin/newsletter-subscribers'
+      );
+      setSubscribers(res.subscribers || []);
+    } catch {
+      // transient fetch error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadSubscribers();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await apiFetch(`/api/admin/newsletter-subscribers/${id}`, { method: 'DELETE' });
+      setDeleteId(null);
+      await loadSubscribers();
+      onUpdated?.();
+    } catch {
+      // error handled
+    }
+  };
+
+  const handleExportCsv = () => {
+    if (subscribers.length === 0) return;
+    const headers = ['Email', 'Full Name', 'Status', 'Source', 'Date Subscribed'];
+    const rows = subscribers.map((s) => [
+      `"${s.email.replace(/"/g, '""')}"`,
+      `"${(s.fullName || '').replace(/"/g, '""')}"`,
+      s.status,
+      s.source || 'footer',
+      new Date(s.createdAt).toISOString(),
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `gsc_newsletter_subscribers_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filtered = subscribers.filter(
+    (s) =>
+      s.email.toLowerCase().includes(search.toLowerCase()) ||
+      (s.fullName && s.fullName.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-slate-900 dark:text-white">
+            Newsletter Subscribers
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+            Ministry partners and believers registered to receive updates, prophetic declarations, and sermon alerts.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={subscribers.length === 0}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0F296B] dark:bg-[#C6922C] text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative w-full max-w-sm">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search subscribers by name or email..."
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-[#060E24] text-xs sm:text-sm outline-none"
+          />
+        </div>
+        <p className="text-xs text-slate-500 whitespace-nowrap">
+          Total: <strong className="text-slate-900 dark:text-white">{subscribers.length}</strong> active subscribers
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="h-48 rounded-xl bg-slate-100 dark:bg-[#0A193C] animate-pulse" />
+      ) : filtered.length === 0 ? (
+        <div className="p-12 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0A193C] text-center">
+          <Mail className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <h3 className="font-serif text-xl font-semibold">No Subscribers Found</h3>
+          <p className="mt-2 text-sm text-slate-500 max-w-md mx-auto">
+            {search
+              ? 'No subscribers match your search term.'
+              : 'Visitors who subscribe using the website footer form will appear here.'}
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0A193C] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-semibold">
+                <tr>
+                  <th className="py-3 px-4">Email Address</th>
+                  <th className="py-3 px-4">Full Name</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Date Subscribed</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                {filtered.map((item) => (
+                  <tr key={item._id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
+                    <td className="py-3.5 px-4 font-medium text-slate-900 dark:text-white">
+                      {item.email}
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
+                      {item.fullName || <span className="text-slate-400 italic">Not provided</span>}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40">
+                        Active
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-xs">
+                      {formatMinistryDate(item.createdAt)}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      {deleteId === item._id ? (
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => void handleDelete(item._id)}
+                            className="px-2.5 py-1 rounded-md bg-red-600 text-white text-xs font-semibold cursor-pointer"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteId(null)}
+                            className="px-2 py-1 rounded-md border text-xs cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteId(item._id)}
+                          aria-label="Delete subscriber"
+                          className="p-1.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
