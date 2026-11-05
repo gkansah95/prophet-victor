@@ -1,8 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { ImagePlus, Loader2, Trash2, Upload } from 'lucide-react';
+import { Crop, ImagePlus, Loader2, Trash2, Upload } from 'lucide-react';
 import { uploadSignedCloudinaryImage } from '../../lib/api';
 import { getOptimizedImageUrl } from '../../lib/media';
 import type { CloudImage } from '../../types/cms';
+import { ImageCropperModal } from './ImageCropperModal';
 
 interface CloudinaryImageInputProps {
   label: string;
@@ -13,32 +14,81 @@ interface CloudinaryImageInputProps {
   helperText?: string;
 }
 
+function parseInitialAspect(aspectClass: string): number | null {
+  if (aspectClass.includes('aspect-video') || aspectClass.includes('16/9') || aspectClass.includes('16-9')) {
+    return 16 / 9;
+  }
+  if (aspectClass.includes('aspect-square') || aspectClass.includes('1/1') || aspectClass.includes('1-1')) {
+    return 1;
+  }
+  if (aspectClass.includes('3/4') || aspectClass.includes('3-4')) {
+    return 3 / 4;
+  }
+  if (aspectClass.includes('4/3') || aspectClass.includes('4-3')) {
+    return 4 / 3;
+  }
+  if (aspectClass.includes('21/9') || aspectClass.includes('21-9')) {
+    return 21 / 9;
+  }
+  return 16 / 9;
+}
+
 export function CloudinaryImageInput({
   label,
   folder,
   value,
   onChange,
   aspectClass = 'aspect-video',
-  helperText = 'JPG, PNG, WebP or AVIF · Max 10 MB · Stored securely on Cloudinary',
+  helperText = 'JPG, PNG, WebP or AVIF · Crop & position tool included · Stored securely on Cloudinary',
 }: CloudinaryImageInputProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const hasImage = Boolean(value?.url);
+  // Cropper modal state
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperSrc, setCropperSrc] = useState<string | null>(null);
+  const [cropperFileName, setCropperFileName] = useState('photograph.jpg');
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const hasImage = Boolean(value?.url);
+  const initialAspect = parseInitialAspect(aspectClass);
+
+  // Handle file selection from local device -> Open Cropper Modal
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setError(null);
+    const objectUrl = URL.createObjectURL(file);
+    setCropperSrc(objectUrl);
+    setCropperFileName(file.name);
+    setCropperOpen(true);
+
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
+  };
+
+  // Open cropper for existing uploaded image
+  const handleOpenCropperForExisting = () => {
+    if (!value?.url) return;
+    setError(null);
+    setCropperSrc(value.url);
+    setCropperFileName('existing-photo.jpg');
+    setCropperOpen(true);
+  };
+
+  // When crop is confirmed -> upload the cropped file to Cloudinary
+  const handleCropConfirm = async (croppedFile: File) => {
+    setCropperOpen(false);
     setUploading(true);
     setProgress(5);
     setError(null);
 
     try {
       const uploaded = await uploadSignedCloudinaryImage(
-        file,
+        croppedFile,
         folder,
         value?.alt || '',
         (pct) => setProgress(pct)
@@ -52,9 +102,6 @@ export function CloudinaryImageInput({
     } finally {
       setUploading(false);
       setProgress(0);
-      if (inputRef.current) {
-        inputRef.current.value = '';
-      }
     }
   };
 
@@ -104,12 +151,24 @@ export function CloudinaryImageInput({
                 />
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Crop & Frame Existing Image Button */}
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={handleOpenCropperForExisting}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-800 dark:text-slate-100 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
+                >
+                  <Crop className="w-3.5 h-3.5 text-[#C6922C]" />
+                  <span>Crop / Fit Frame</span>
+                </button>
+
+                {/* Replace Image Button */}
                 <button
                   type="button"
                   disabled={uploading}
                   onClick={() => inputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0F296B] hover:bg-[#163A94] dark:bg-[#C6922C] dark:hover:bg-[#B38222] text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0F296B] hover:bg-[#163A94] dark:bg-[#C6922C] dark:hover:bg-[#B38222] text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
                 >
                   {uploading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -119,6 +178,7 @@ export function CloudinaryImageInput({
                   <span>{uploading ? `Uploading ${progress}%` : 'Replace Image'}</span>
                 </button>
 
+                {/* Remove Image Button */}
                 <button
                   type="button"
                   disabled={uploading}
@@ -150,7 +210,7 @@ export function CloudinaryImageInput({
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0F296B] hover:bg-[#163A94] dark:bg-[#C6922C] dark:hover:bg-[#B38222] text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>Select Photograph</span>
+              <span>Select Photograph & Crop</span>
             </button>
           </div>
         )}
@@ -176,6 +236,20 @@ export function CloudinaryImageInput({
           className="hidden"
         />
       </div>
+
+      {/* Interactive Crop & Framing Modal */}
+      {cropperOpen && cropperSrc && (
+        <ImageCropperModal
+          imageSrc={cropperSrc}
+          fileName={cropperFileName}
+          initialAspect={initialAspect}
+          onConfirm={handleCropConfirm}
+          onCancel={() => {
+            setCropperOpen(false);
+            setCropperSrc(null);
+          }}
+        />
+      )}
     </div>
   );
 }

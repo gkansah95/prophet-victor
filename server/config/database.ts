@@ -14,6 +14,54 @@ export function getDatabaseConnectionError(): string | null {
   return lastConnectionError;
 }
 
+export function autoEncodeMongoUri(rawUri: string): string {
+  const trimmed = rawUri.trim();
+  if (!trimmed.startsWith('mongodb://') && !trimmed.startsWith('mongodb+srv://')) {
+    return trimmed;
+  }
+
+  // Remove any accidental < > brackets around the password
+  const cleaned = trimmed.replace(/<([^>]+)>/g, '$1');
+
+  const protocolMatch = cleaned.match(/^(mongodb(?:\+srv)?:\/\/)(.*)$/);
+  if (!protocolMatch) return cleaned;
+
+  const protocol = protocolMatch[1];
+  const afterProtocol = protocolMatch[2];
+
+  const pathOrQueryIndex = afterProtocol.search(/[/?]/);
+  const authority = pathOrQueryIndex === -1 ? afterProtocol : afterProtocol.slice(0, pathOrQueryIndex);
+  const pathAndQuery = pathOrQueryIndex === -1 ? '' : afterProtocol.slice(pathOrQueryIndex);
+
+  const lastAtIndex = authority.lastIndexOf('@');
+  if (lastAtIndex === -1) return cleaned;
+
+  const userInfo = authority.slice(0, lastAtIndex);
+  const host = authority.slice(lastAtIndex + 1);
+
+  const firstColonIndex = userInfo.indexOf(':');
+  if (firstColonIndex === -1) return cleaned;
+
+  const user = userInfo.slice(0, firstColonIndex);
+  const rawPassword = userInfo.slice(firstColonIndex + 1);
+
+  let decodedPassword = rawPassword;
+  try {
+    decodedPassword = decodeURIComponent(rawPassword);
+  } catch {
+    // keep raw
+  }
+
+  let decodedUser = user;
+  try {
+    decodedUser = decodeURIComponent(user);
+  } catch {
+    // keep raw
+  }
+
+  return `${protocol}${encodeURIComponent(decodedUser)}:${encodeURIComponent(decodedPassword)}@${host}${pathAndQuery}`;
+}
+
 async function bootstrapInitialAdminIfConfigured(): Promise<void> {
   if (!env.ADMIN_EMAIL || !env.ADMIN_INITIAL_PASSWORD) {
     return;
@@ -60,18 +108,27 @@ export async function connectDatabase(): Promise<boolean> {
 
   connectingPromise = (async () => {
     try {
-      await mongoose.connect(env.MONGODB_URI, {
+      const sanitizedUri = autoEncodeMongoUri(env.MONGODB_URI);
+
+      await mongoose.connect(sanitizedUri, {
         serverSelectionTimeoutMS: 7000,
+        authSource: 'admin',
       });
       lastConnectionError = null;
       await bootstrapInitialAdminIfConfigured();
       return true;
     } catch (err) {
-      lastConnectionError =
-        err instanceof Error
-          ? 'Unable to connect to MongoDB Atlas. Please verify MONGODB_URI and network IP allowlist.'
-          : 'Unknown database connection error.';
-      console.error('[Database] MongoDB connection error:', err instanceof Error ? err.message : err);
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('bad auth') || msg.includes('Authentication failed')) {
+        lastConnectionError =
+          'MongoDB authentication failed (bad auth). Please check: 1) Your database user password in MONGODB_URI matches MongoDB Atlas. 2) In Atlas -> Database Access, verify "gkansah95_db_user" has "Read and write to any database" privileges.';
+      } else {
+        lastConnectionError =
+          err instanceof Error
+            ? `Unable to connect to MongoDB Atlas (${err.message}). Please verify MONGODB_URI and network IP allowlist.`
+            : 'Unknown database connection error.';
+      }
+      console.warn('[Database] ' + lastConnectionError);
       return false;
     } finally {
       connectingPromise = null;

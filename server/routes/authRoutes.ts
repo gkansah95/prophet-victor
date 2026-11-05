@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { Router, type Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { connectDatabase, isDatabaseConnected } from '../config/database.ts';
+import { connectDatabase, getDatabaseConnectionError, isDatabaseConnected } from '../config/database.ts';
 import { env, getSessionCookieOptions, isCloudinaryConfigured, isMongoConfigured } from '../config/env.ts';
 import {
   generateSecureToken,
@@ -52,6 +52,7 @@ router.get('/session', async (req: AuthenticatedRequest, res: Response) => {
         dbConnected,
         cloudinaryConfigured: isCloudinaryConfigured(),
         hasAdminAccount,
+        dbError: getDatabaseConnectionError(),
       },
     });
     return;
@@ -75,6 +76,7 @@ router.get('/session', async (req: AuthenticatedRequest, res: Response) => {
         dbConnected,
         cloudinaryConfigured: isCloudinaryConfigured(),
         hasAdminAccount,
+        dbError: getDatabaseConnectionError(),
       },
     });
     return;
@@ -93,6 +95,7 @@ router.get('/session', async (req: AuthenticatedRequest, res: Response) => {
         dbConnected,
         cloudinaryConfigured: isCloudinaryConfigured(),
         hasAdminAccount,
+        dbError: getDatabaseConnectionError(),
       },
     });
     return;

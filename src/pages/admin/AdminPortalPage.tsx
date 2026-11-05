@@ -189,15 +189,23 @@ export function AdminPortalPage() {
             <div className="mb-6 p-4 rounded-xl bg-amber-950/70 border border-amber-500/40 text-amber-100 text-xs leading-relaxed space-y-1.5">
               <div className="flex items-center gap-2 font-semibold text-amber-300">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>MongoDB Atlas Configuration Required</span>
+                <span>
+                  {system.dbError
+                    ? 'MongoDB Atlas Connection Issue'
+                    : 'MongoDB Atlas Configuration Required'}
+                </span>
               </div>
-              <p>
-                Set <code className="font-mono">MONGODB_URI</code>,{' '}
-                <code className="font-mono">SESSION_SECRET</code>,{' '}
-                <code className="font-mono">ADMIN_EMAIL</code>, and{' '}
-                <code className="font-mono">ADMIN_INITIAL_PASSWORD</code> in your environment
-                variables to activate database authentication and CMS storage.
-              </p>
+              {system.dbError ? (
+                <p className="text-amber-200/95 font-medium">{system.dbError}</p>
+              ) : (
+                <p>
+                  Set <code className="font-mono">MONGODB_URI</code>,{' '}
+                  <code className="font-mono">SESSION_SECRET</code>,{' '}
+                  <code className="font-mono">ADMIN_EMAIL</code>, and{' '}
+                  <code className="font-mono">ADMIN_INITIAL_PASSWORD</code> in your environment
+                  variables to activate database authentication and CMS storage.
+                </p>
+              )}
             </div>
           )}
 

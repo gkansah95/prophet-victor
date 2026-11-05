@@ -263,6 +263,7 @@ export interface SessionStatusResponse {
     dbConnected: boolean;
     cloudinaryConfigured: boolean;
     hasAdminAccount: boolean;
+    dbError?: string | null;
   };
 }
 
